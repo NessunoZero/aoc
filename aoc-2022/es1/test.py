@@ -10,5 +10,8 @@ for line in user_input:
 	except:
 		result += [sum]
 		sum = 0
-
-print(max(result))
+result.sort(reverse=True)
+print(result[0])
+print(result[1])
+print(result[2])
+print(result[0]+result[1]+result[2])
