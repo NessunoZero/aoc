@@ -1,4 +1,5 @@
 import sys
+from copy import deepcopy
 
 user_input = map(lambda line: line.strip(),sys.stdin.readlines())
 
@@ -21,7 +22,10 @@ for row in segments:
 
 h = max_y + 1
 w = max_x-min_x + 1
-matrix = [['.' for j in range(w)] for i in range(h)]
+matrix = set()
+
+def get_label(x,y):
+  return f'{x}_{y}'
 
 def draw(start,end):
 	first, last = None, None
@@ -29,12 +33,12 @@ def draw(start,end):
 		first = min(start[1], end[1])
 		last = max(start[1],end[1])
 		for i in range(last - first + 1):
-			matrix[first + i][start[0] - min_x] = '#'
+			matrix.add(get_label(first + i,start[0] - min_x))
 	if start[1] == end[1]:
 		first = min(start[0], end[0])
 		last = max(start[0],end[0])
 		for i in range(last - first + 1):
-			matrix[start[1]][first + i - min_x] = '#'
+			matrix.add(get_label(start[1],first + i - min_x))
 
 last = None
 for seg in segments:
@@ -46,51 +50,73 @@ for seg in segments:
 			draw(last,pair)
 			last = pair
 
+class controller():
+  def __init__(self,index_rule,max_index = None):
+    self.index_rule = index_rule
+    self.max_index = max_index
+    self.stones = deepcopy(matrix)
+    self.sand = set()
 
+  def check_pos(self,pos):
+    x, y = pos
+    label = get_label(x,y)
+    if self.max_index and self.max_index == x:
+      return False
+    if self.index_rule(x,y):
+      return None
+    elif label in self.stones or label in self.sand:
+      return False
+    return True
+  
+  def put_sand(self,pos):
+    self.sand.add(get_label(*pos))
 
-def check_pos(pos):
-	x, y = pos
-	if y < 0 or y >= w or x >= h:
-		return None
-	elif matrix[x][y] != '.':
-		return False
-	return True
+def index_rule_part1(x,y):
+  return y < 0 or y >= w or x >= h
 
-def insert_next_pos(pos):
-	check = check_pos(pos)
-	if check:
-		return insert_sand(pos)
-	elif check is None:
-		return None
-	else:
-		return False
+def index_rule_part2(*args):
+  return False
 
-def insert_sand(pos):
-	i = pos[0]
-	j = pos[1]
-	nexts = [(i+1,j),(i+1, j-1), (i+1, j+1)]
-	for next in nexts:
-		check = insert_next_pos(next)
-		if check is None:
-			return None
-		elif check:
-			return True
-		else:
-			pass
-	matrix[i][j] = 'o'
-	return True
+max_index_part1 = None
+max_index_part2 = h+1
 
-inserted_sand = True
-counter = 0
+def exercize(index_rule,max_index):
+  checker = controller(index_rule,max_index)
+  count = 0
+  sand_placed = True
 
-while inserted_sand:
-	pos = 0, 500 - min_x
-	if check_pos(pos):
-		inserted_sand = insert_sand(pos)
-		if inserted_sand:
-			counter += 1
-	else:
-		break
+  falling_sand = True
+  
+  while sand_placed:
+    sand_placed = False
+    pos = (0,500-min_x)
+    falling_sand = True
+    while falling_sand:
+      falling_sand = False
+      if checker.check_pos(pos):
+        x,y = pos
+        aNone = False
+        aTrue = False
+        for next in map(lambda npos: (npos,checker.check_pos(npos)),[(x+1,y),(x+1, y-1), (x+1, y+1)]):
+          if next[1] is None:
+            aNone = True
+            break
+          elif next[1] is True:
+            pos = next[0]
+            aTrue = True
+            break
+        if aNone:
+          sand_placed = False
+          break
+        elif aTrue:
+          falling_sand = True
+        else:
+          checker.put_sand(pos)
+          count += 1
+          sand_placed = True
+          break
 
+  print(count)
 
-print(counter)
+exercize(index_rule_part1,max_index_part1)
+exercize(index_rule_part2,max_index_part2)
