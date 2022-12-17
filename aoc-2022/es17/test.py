@@ -1,5 +1,5 @@
 import sys
-
+import time
 
 user_input = map(lambda line: line.strip(), sys.stdin.readlines())
 
@@ -53,7 +53,7 @@ def simulate_n_stones(n):
         stone_max_r = stones_max_r[stone_index]
         x, y = 3 - 1, max_y + falling_h
         iter = 0
-        while y > max_y + 2:
+        while y > max_y + 1:
             iter += 1
             current_jet = current_jet % len_gas_jets
             wind = 1 if gas_jets[current_jet] == '>' else -1
@@ -90,5 +90,7 @@ def simulate_n_stones(n):
 
     print('max_h:', max_y)
 
-
+start_time = time.time()
 simulate_n_stones(2022)
+print("--- %s seconds ---" % (time.time() - start_time))
+start_time = time.time()
